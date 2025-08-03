@@ -1,0 +1,29 @@
+{
+  "name": "ai-python-tutor",
+  "version": "1.0.0",
+  "description": "AI-powered Python tutoring application",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "dev": "live-server --port=3000 --open=/index.html",
+    "start": "live-server --port=3000 --open=/index.html"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.0",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "live-server": "^1.2.2"
+  },
+  "keywords": [
+    "python",
+    "tutor",
+    "ai",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #1a202c;
+  color: #e2e8f0;
+}
+.prose {
+  color: #e2e8f0;
+}
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: #fff;
+}
+.prose code {
+  background-color: #2d3748;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.prose pre {
+  background-color: #1f2937;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.5rem;
+}
+.prose a {
+  color: #63b3ed;
+  text-decoration: underline;
+}
