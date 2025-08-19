@@ -13,16 +13,44 @@ class PyodideService {
     try {
       appState.setLoading(true, CONFIG.UI.LOADING_MESSAGES.INITIALIZING);
 
+      // Check if loadPyodide is available
+      if (typeof loadPyodide !== 'function') {
+        console.error(
+          'loadPyodide is not defined. Make sure pyodide.js is loaded from the CDN before this script runs.'
+        );
+        appState.setLoading(false);
+        throw new Error(
+          'loadPyodide is not defined. Pyodide script may not be loaded.'
+        );
+      }
+
       // Load Pyodide
       this.pyodide = await loadPyodide();
 
       // Load required packages
       for (const pkg of CONFIG.PYODIDE.PACKAGES) {
-        await this.pyodide.loadPackage(pkg);
+        try {
+          await this.pyodide.loadPackage(pkg);
+        } catch (pkgError) {
+          console.error(`Failed to load Pyodide package: ${pkg}`, pkgError);
+          appState.setLoading(false);
+          throw new Error(`Failed to load Pyodide package: ${pkg}`);
+        }
       }
 
       // Initialize Python environment
-      await this.pyodide.runPythonAsync(CONFIG.PYODIDE.INIT_SCRIPT);
+      try {
+        await this.pyodide.runPythonAsync(CONFIG.PYODIDE.INIT_SCRIPT);
+      } catch (pyInitError) {
+        console.error(
+          'Failed to run Python environment init script:',
+          pyInitError
+        );
+        appState.setLoading(false);
+        throw new Error(
+          'Failed to initialize Python environment (init script failed)'
+        );
+      }
 
       this.isInitialized = true;
       appState.setPyodide(this.pyodide);

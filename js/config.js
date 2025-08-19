@@ -49,6 +49,15 @@ export const CONFIG = {
       Structure the response using Markdown. The exercise should have a clear goal and an empty code block for the user to fill in.`,
     EXERCISE_PROMPT_TEMPLATE: `Generate a new and more challenging exercise based on the current topic: {topic}. 
       The exercise should be self-contained and ready for the student to solve. It should include a clear problem description and an empty code block.`,
+
+    // First lesson configuration
+    FIRST_LESSON: {
+      TITLE: 'Lesson 1: Print a Message',
+      INSTRUCTIONS:
+        'Use Python\'s print() function to output a message to the console. Try printing "Hello, World!" or any message you like.',
+      DEFAULT_CODE: '# Write your code here\nprint("Hello, World!")',
+      EXPECTED_OUTPUT: 'Hello, World!',
+    },
   },
 
   // Tutor Configuration
@@ -88,6 +97,13 @@ export const SELECTORS = {
     SEND_CHAT_BTN: '#send-chat',
     LOADING_OVERLAY: '#loading-overlay',
     LOADING_TEXT: '#loading-text',
+
+    // Lesson-specific selectors
+    LESSON_TITLE: '#lesson-title',
+    LESSON_INSTRUCTIONS: '#lesson-instructions',
+    LESSON_CODE_EDITOR: '#lesson-code-editor',
+    LESSON_RUN_BTN: '#lesson-run-btn',
+    LESSON_OUTPUT: '#lesson-output',
   },
   MODAL: {
     CONTAINER: '#custom-modal',

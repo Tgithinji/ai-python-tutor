@@ -30,7 +30,24 @@ class UIService {
       modalTitle: document.querySelector(SELECTORS.MODAL.TITLE),
       modalMessage: document.querySelector(SELECTORS.MODAL.MESSAGE),
       modalOkButton: document.querySelector(SELECTORS.MODAL.OK_BUTTON),
+
+      // Lesson Elements
+      lessonTitle: document.querySelector(SELECTORS.UI.LESSON_TITLE),
+      lessonInstructions: document.querySelector(
+        SELECTORS.UI.LESSON_INSTRUCTIONS
+      ),
+      lessonCodeEditor: document.querySelector(SELECTORS.UI.LESSON_CODE_EDITOR),
+      lessonRunBtn: document.querySelector(SELECTORS.UI.LESSON_RUN_BTN),
+      lessonOutput: document.querySelector(SELECTORS.UI.LESSON_OUTPUT),
     };
+    // Log which elements are found or missing
+    Object.entries(this.elements).forEach(([key, el]) => {
+      if (el) {
+        console.log(`[UI INIT] Found element: ${key}`);
+      } else {
+        console.warn(`[UI INIT] Missing element: ${key}`);
+      }
+    });
   }
 
   // Setup event listeners
@@ -205,12 +222,119 @@ class UIService {
     const button = this.elements[buttonName];
     if (button) {
       button.addEventListener('click', callback);
+      console.log(`[UI] Event listener attached to: ${buttonName}`);
+    } else {
+      console.warn(
+        `[UI] Tried to attach listener to missing button: ${buttonName}`
+      );
     }
   }
 
   // Get element by name
   getElement(name) {
     return this.elements[name];
+  }
+
+  // Lesson-specific methods
+  updateLessonTitle(title) {
+    if (this.elements.lessonTitle) {
+      this.elements.lessonTitle.textContent = title;
+    }
+  }
+
+  updateLessonInstructions(instructions) {
+    if (this.elements.lessonInstructions) {
+      this.elements.lessonInstructions.textContent = instructions;
+    }
+  }
+
+  getLessonCode() {
+    return this.elements.lessonCodeEditor?.value || '';
+  }
+
+  setLessonCode(code) {
+    if (this.elements.lessonCodeEditor) {
+      this.elements.lessonCodeEditor.value = code;
+    }
+  }
+
+  updateLessonOutput(output, isError = false) {
+    if (this.elements.lessonOutput) {
+      this.elements.lessonOutput.textContent = output;
+      this.elements.lessonOutput.style.color = isError
+        ? CONFIG.UI.COLORS.ERROR
+        : CONFIG.UI.COLORS.SUCCESS;
+
+      // Add some styling for better visibility
+      if (output) {
+        this.elements.lessonOutput.style.backgroundColor = isError
+          ? 'rgba(248, 113, 113, 0.1)'
+          : 'rgba(52, 211, 153, 0.1)';
+        this.elements.lessonOutput.style.padding = '12px';
+        this.elements.lessonOutput.style.borderRadius = '8px';
+        this.elements.lessonOutput.style.border = `1px solid ${isError ? CONFIG.UI.COLORS.ERROR : CONFIG.UI.COLORS.SUCCESS}`;
+      } else {
+        this.elements.lessonOutput.style.backgroundColor = '';
+        this.elements.lessonOutput.style.padding = '';
+        this.elements.lessonOutput.style.borderRadius = '';
+        this.elements.lessonOutput.style.border = '';
+      }
+    }
+  }
+
+  clearLessonOutput() {
+    this.updateLessonOutput('');
+  }
+
+  addLessonButtonListener(callback) {
+    if (this.elements.lessonRunBtn) {
+      this.elements.lessonRunBtn.addEventListener('click', callback);
+    }
+  }
+
+  // Create lesson UI if it doesn't exist
+  createLessonUI() {
+    if (!this.elements.lessonTitle) {
+      this._injectLessonHTML();
+      this._initializeElements(); // Re-initialize to get new elements
+    }
+  }
+
+  _injectLessonHTML() {
+    const courseContent = this.elements.courseContent;
+    if (courseContent) {
+      courseContent.innerHTML = `
+        <div class="lesson-container space-y-6">
+          <div class="lesson-header">
+            <h2 id="lesson-title" class="text-2xl font-bold text-white mb-2">${CONFIG.LESSON.FIRST_LESSON.TITLE}</h2>
+            <p id="lesson-instructions" class="text-gray-300 mb-4">${CONFIG.LESSON.FIRST_LESSON.INSTRUCTIONS}</p>
+          </div>
+          
+          <div class="lesson-code-section">
+            <label for="lesson-code-editor" class="block text-sm font-medium text-gray-300 mb-2">Your Code:</label>
+            <textarea 
+              id="lesson-code-editor" 
+              class="w-full h-32 p-4 bg-gray-900 border border-gray-700 rounded-lg font-mono text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Write your Python code here..."
+            >${CONFIG.LESSON.FIRST_LESSON.DEFAULT_CODE}</textarea>
+            
+            <div class="mt-4 flex justify-between items-center">
+              <button 
+                id="lesson-run-btn" 
+                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                Run Code
+              </button>
+            </div>
+          </div>
+          
+          <div class="lesson-output-section">
+            <label class="block text-sm font-medium text-gray-300 mb-2">Output:</label>
+            <pre id="lesson-output" class="w-full min-h-16 p-4 bg-gray-900 border border-gray-700 rounded-lg text-sm font-mono overflow-auto whitespace-pre-wrap"></pre>
+          </div>
+        </div>
+      `;
+    }
   }
 }
 

@@ -15,17 +15,53 @@ class AppController {
     try {
       console.log('Initializing AI Python Tutor...');
 
-      // Initialize Pyodide
+      // Log before Pyodide initialization
+      console.log('About to initialize Pyodide...');
       await pyodideService.initialize();
+      console.log('Pyodide initialized, now initializing first lesson...');
 
-      // Generate initial lesson
-      await this.generateLesson();
+      // Initialize first lesson
+      this.initializeFirstLesson();
+      console.log('First lesson initialized, setting up event handlers...');
 
       // Setup event handlers
       this._setupEventHandlers();
 
       this.isInitialized = true;
       console.log('Application initialized successfully');
+
+      // Show app before initializing UI elements
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const appEl = document.getElementById('app');
+      if (appEl) {
+        appEl.classList.remove('hidden');
+        console.log('[UI] #app shown');
+      } else {
+        console.warn('[UI] #app not found');
+      }
+      if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+        console.log('[UI] #loadingOverlay hidden');
+      } else {
+        console.warn('[UI] #loadingOverlay not found');
+      }
+
+      // Now log presence of lesson UI elements
+      const lessonIds = [
+        'lessonTitle',
+        'lessonInstructions',
+        'lessonCodeEditor',
+        'lessonRunBtn',
+        'lessonOutput',
+      ];
+      lessonIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          console.log(`[UI] Found #${id}`);
+        } else {
+          console.warn(`[UI] Missing #${id}`);
+        }
+      });
     } catch (error) {
       console.error('Failed to initialize application:', error);
       uiService.showModal('Initialization Error', error.message);
@@ -44,6 +80,9 @@ class AppController {
 
     // Send chat button
     uiService.addButtonListener('sendChatBtn', () => this.handleSendChat());
+
+    // Lesson run button
+    uiService.addLessonButtonListener(() => this.handleLessonRunCode());
   }
 
   // Handle code execution
@@ -189,6 +228,68 @@ class AppController {
     }
   }
 
+  // Handle lesson code execution
+  async handleLessonRunCode() {
+    const code = uiService.getLessonCode();
+
+    if (!code.trim()) {
+      uiService.updateLessonOutput('Please enter some code to run.', true);
+      return;
+    }
+
+    if (!pyodideService.isReady()) {
+      uiService.showModal(
+        'Pyodide not ready',
+        ERROR_MESSAGES.PYODIDE_NOT_READY
+      );
+      return;
+    }
+
+    try {
+      // Update state with current code
+      appState.setCurrentCode(code);
+      uiService.clearLessonOutput();
+
+      const result = await pyodideService.executeCode(code);
+
+      if (result.success) {
+        const output =
+          result.stdout || 'Code executed successfully, no output.';
+        appState.setLessonOutput(output);
+        uiService.updateLessonOutput(output, false);
+      } else {
+        appState.setLessonError(result.stderr);
+        uiService.updateLessonOutput(result.stderr, true);
+      }
+    } catch (error) {
+      const errorMessage = `Error: ${error.message}`;
+      appState.setLessonError(errorMessage);
+      uiService.updateLessonOutput(errorMessage, true);
+    }
+  }
+
+  // Initialize first lesson
+  initializeFirstLesson() {
+    uiService.createLessonUI();
+
+    // Set up state listeners for lesson
+    appState.subscribe('lessonOutput', output => {
+      if (output) {
+        uiService.updateLessonOutput(output, false);
+      }
+    });
+
+    appState.subscribe('lessonError', error => {
+      if (error) {
+        uiService.updateLessonOutput(error, true);
+      }
+    });
+
+    appState.subscribe('currentCode', code => {
+      uiService.setLessonCode(code);
+    });
+  }
+
   // Reset application state
   async reset() {
     try {
@@ -218,7 +319,48 @@ class AppController {
 // Create and export singleton instance
 export const appController = new AppController();
 
-// Initialize app when DOM is loaded
-window.addEventListener('DOMContentLoaded', () => {
-  appController.initialize();
+// Multilingual support
+async function loadLanguage(lang) {
+  try {
+    const resp = await fetch(`lang/${lang}.json`);
+    if (!resp.ok) throw new Error('Language file not found');
+    return await resp.json();
+  } catch (e) {
+    console.error('Failed to load language file:', e);
+    return {};
+  }
+}
+
+function updateI18nTexts(translations) {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[key]) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = translations[key];
+      } else if (el.tagName === 'OPTION') {
+        el.textContent = translations[key];
+      } else {
+        el.textContent = translations[key];
+      }
+    }
+  });
+}
+
+async function setLanguage(lang) {
+  localStorage.setItem('lang', lang);
+  const translations = await loadLanguage(lang);
+  updateI18nTexts(translations);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const langSwitcher = document.getElementById('lang-switcher');
+  if (langSwitcher) {
+    // Set initial language
+    const savedLang = localStorage.getItem('lang') || 'en';
+    langSwitcher.value = savedLang;
+    setLanguage(savedLang);
+    langSwitcher.addEventListener('change', e => {
+      setLanguage(e.target.value);
+    });
+  }
 });

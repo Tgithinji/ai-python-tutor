@@ -9,6 +9,9 @@ class AppState {
       // Lesson state
       currentLesson: '',
       lessonId: 1,
+      currentCode: '',
+      lessonOutput: '',
+      lessonError: null,
 
       // Chat state
       chatContext: [],
@@ -113,6 +116,45 @@ class AppState {
   // Get current retry delay
   getRetryDelay() {
     return this._state.retryDelay;
+  }
+
+  // Lesson state management
+  setCurrentCode(code) {
+    this._state.currentCode = code;
+    this._notifyListeners('currentCode', code);
+  }
+
+  getCurrentCode() {
+    return this._state.currentCode;
+  }
+
+  setLessonOutput(output) {
+    this._state.lessonOutput = output;
+    this._state.lessonError = null;
+    this._notifyListeners('lessonOutput', output);
+    this._notifyListeners('lessonError', null);
+  }
+
+  setLessonError(error) {
+    this._state.lessonError = error;
+    this._state.lessonOutput = '';
+    this._notifyListeners('lessonError', error);
+    this._notifyListeners('lessonOutput', '');
+  }
+
+  getLessonOutput() {
+    return this._state.lessonOutput;
+  }
+
+  getLessonError() {
+    return this._state.lessonError;
+  }
+
+  clearLessonOutput() {
+    this._state.lessonOutput = '';
+    this._state.lessonError = null;
+    this._notifyListeners('lessonOutput', '');
+    this._notifyListeners('lessonError', null);
   }
 
   // Get all state (for debugging)
